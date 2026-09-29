@@ -355,7 +355,7 @@ function sectionHTML(key, title, items, extra){
 }
 function itemsOf(k){ const A = all(); return k === "urg" ? A.filter(t => t[5]) : A.filter(t => t[1] === k); }
 function render(){
-  let h = sectionHTML("urg","Urgente esta semana", itemsOf("urg"), "urg");
+  let h = sectionHTML("urg","Urgente", itemsOf("urg"), "urg");
   for (const [k,title] of AREAS) h += sectionHTML(k, title, itemsOf(k));
   $("#list").innerHTML = h;
   updateMeter(); buildHelpers(); buildDays(); syncWhoChips();
