@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>m&a — checklist de boda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canario:#FFE36B; --bugambilia:#E56AA6; --cielo:#7EC1E8; --profundo:#B02F74;
+  --tinta:#1A1426; --cal:#FBF8F1; --suave:#5E5868; --plata:#C7C9CC;
+  --bg:var(--cal); --fg:var(--tinta); --muted:var(--suave); --line:rgba(26,20,38,.12); --card:#fff;
+  --sans:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif:"Instrument Serif", Georgia, "Times New Roman", serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#1A1426; --fg:#FBF8F1; --muted:#B9B3C4; --line:rgba(251,248,241,.14); --card:#241D33; }
+}
+:root[data-theme="dark"]{ --bg:#1A1426; --fg:#FBF8F1; --muted:#B9B3C4; --line:rgba(251,248,241,.14); --card:#241D33; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px}
+
+/* Header */
+.sig{display:flex;align-items:baseline;gap:.15em;font-size:clamp(44px,11vw,84px);line-height:.9;letter-spacing:-.02em;margin:0 0 14px}
+.sig .m{font-family:var(--serif);font-style:italic;font-weight:400}
+.sig .amp{font-family:var(--serif);color:var(--profundo);font-size:1.25em;line-height:.7}
+.sig .a{font-family:var(--sans);font-weight:800}
+.sub{font-family:var(--serif);font-size:22px;margin:0 0 22px;color:var(--muted)}
+.sub b{font-family:var(--sans);font-weight:800;color:var(--fg);font-size:.8em}
+
+.meter{position:relative;height:54px;border:2px solid var(--fg);border-radius:999px;overflow:hidden;background:var(--card)}
+.meter .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--canario);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.meter .txt{position:relative;display:flex;justify-content:space-between;align-items:center;height:100%;padding:0 20px;font-weight:800;color:var(--tinta)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .meter .txt{color:var(--fg)} }
+.meter .txt span:last-child{font-weight:600}
+.sync{font-size:13px;color:var(--muted);margin:8px 4px 0}
+
+/* Controls */
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:16px 0 12px;margin-top:10px;border-bottom:1px solid var(--line)}
+.chip{font:600 14px var(--sans);border:1.5px solid var(--fg);background:transparent;color:var(--fg);padding:7px 14px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.chip:focus-visible,.row:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
+.toggle{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--profundo);width:18px;height:18px}
+
+/* Sections */
+section{margin-top:34px}
+section.urg{background:var(--canario);color:var(--tinta);border-radius:22px;padding:18px 16px 8px;margin-left:-8px;margin-right:-8px}
+section.urg .note{color:#5E5868}
+h2{display:flex;align-items:baseline;gap:10px;font-size:26px;font-weight:800;letter-spacing:-.01em;margin:0 0 8px}
+h2 .count{font:400 20px var(--serif);font-style:italic;color:inherit;opacity:.65}
+h2 .done-tag{font:600 13px var(--sans);background:var(--profundo);color:#fff;border-radius:999px;padding:3px 10px;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+section.complete h2 .done-tag{transform:scale(1)}
+
+ul{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:start;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:10px;-webkit-tap-highlight-color:transparent}
+section.urg .row{border-color:rgba(26,20,38,.15)}
+.row:last-child{border-bottom:0}
+.box{width:28px;height:28px;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;transition:background .2s,border-color .2s,transform .2s}
+.box svg{width:16px;height:16px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .25s ease .05s}
+.row.done .box{background:var(--profundo);border-color:var(--profundo);animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
+.row.done .box svg{stroke-dashoffset:0}
+@keyframes pop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+.task{position:relative;font-size:16px;font-weight:600;align-self:center}
+.task .t{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-position:0 55%;background-size:0 2px;transition:background-size .3s ease,opacity .3s}
+.row.done .task .t{background-size:100% 2px;opacity:.45}
+.note{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:2px}
+.who{font:600 12px var(--sans);border-radius:999px;padding:3px 9px;white-space:nowrap;margin-top:4px;color:var(--tinta)}
+.who.A{background:var(--cielo)} .who.M{background:var(--bugambilia)} .who.AM{background:var(--canario)}
+section.urg .who.AM{background:#fff}
+.who.N{background:transparent;border:1.5px dashed var(--plata);color:var(--muted)}
+.help{display:block;font-size:13px;font-weight:600;margin-top:4px;color:var(--profundo)}
+section.urg .help{color:#B02F74}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .help{color:var(--bugambilia)} }
+.hrow{display:flex;gap:6px;align-items:center;width:100%;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.hrow::-webkit-scrollbar{display:none}
+.hrow .lbl{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--muted);white-space:nowrap;margin-right:2px}
+.hrow .chip{font-size:13px;padding:5px 11px;white-space:nowrap;border-color:var(--bugambilia)}
+.hrow .chip[aria-pressed="true"]{background:var(--bugambilia);color:var(--tinta);border-color:var(--bugambilia)}
+.rrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+.addbtn{font:800 16px var(--sans);background:var(--fg);color:var(--bg);border:0;border-radius:999px;padding:12px 20px;cursor:pointer;margin-top:14px}
+.addbtn:focus-visible,.form button:focus-visible,.form input:focus-visible,.form select:focus-visible,.del:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
+.form{display:none;margin-top:14px;background:var(--card);border:2px solid var(--fg);border-radius:22px;padding:18px}
+.form.open{display:grid;gap:12px}
+.form label{display:grid;gap:4px;font-size:14px;font-weight:600}
+.form input[type=text],.form select{font:400 16px var(--sans);color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+.form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg .chip{font-size:13px;padding:6px 12px}
+.form .urgck{display:flex;align-items:center;gap:8px;font-weight:600}
+.form .urgck input{accent-color:var(--profundo);width:18px;height:18px}
+.form .actions{display:flex;gap:10px;flex-wrap:wrap}
+.form .err{color:var(--profundo);font-size:14px;min-height:1em;margin:0}
+.del{background:none;border:0;color:var(--muted);font:600 13px var(--sans);cursor:pointer;padding:0;margin-top:4px;text-decoration:underline}
+.mine{font:400 13px var(--serif);font-style:italic;color:var(--muted)}
+@media (max-width:480px){ .form .two{grid-template-columns:1fr} }
+.empty{font-family:var(--serif);font-size:20px;color:var(--muted);padding:12px 4px}
+
+footer{margin-top:48px;font-family:var(--serif);font-size:18px;color:var(--muted);text-align:center}
+@media (max-width:480px){ .toggle{margin-left:0;width:100%} h2{font-size:23px} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="sig" aria-label="m&a"><span class="m">m</span><span class="amp">&amp;</span><span class="a">a.</span></h1>
+    <p class="sub" id="sub">qué rollo con la boda</p>
+    <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="meter">
+      <div class="fill" id="fill"></div>
+      <div class="txt"><span id="pct">0%</span><span id="cnt"></span></div>
+    </div>
+    <p class="sync" id="sync">Cargando…</p>
+    <button class="addbtn" id="openForm" aria-expanded="false">+ Agregar tarea</button>
+    <form class="form" id="form" autocomplete="off">
+      <label>Tarea<input type="text" id="fText" maxlength="140" placeholder="Ej. Recoger los manteles con Karen"></label>
+      <div class="two">
+        <label>Área<select id="fArea"></select></label>
+        <label>Con quién (opcional)<input type="text" id="fHelp" list="helpList" placeholder="Separa con comas"></label>
+      </div>
+      <datalist id="helpList"></datalist>
+      <div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Responsable</div>
+        <div class="seg" id="fWho">
+          <button type="button" class="chip" data-w="A" aria-pressed="true">Alfredo</button>
+          <button type="button" class="chip" data-w="M" aria-pressed="false">Mitzi</button>
+          <button type="button" class="chip" data-w="AM" aria-pressed="false">Los dos</button>
+          <button type="button" class="chip" data-w="N" aria-pressed="false">Sin asignar</button>
+        </div></div>
+      <label>Nota (opcional)<input type="text" id="fNote" maxlength="140"></label>
+      <label class="urgck"><input type="checkbox" id="fUrg"> Es urgente</label>
+      <p class="err" id="fErr"></p>
+      <div class="actions"><button class="addbtn" type="submit" style="margin:0">Agregar tarea</button>
+        <button type="button" class="chip" id="closeForm">Cancelar</button></div>
+    </form>
+  </header>
+
+  <div class="controls" role="toolbar" aria-label="Filtrar tareas">
+    <div class="rrow" id="rrow">
+    <button class="chip" data-f="all" aria-pressed="true">Todas</button>
+    <button class="chip" data-f="A" aria-pressed="false">Alfredo</button>
+    <button class="chip" data-f="M" aria-pressed="false">Mitzi</button>
+    <button class="chip" data-f="N" aria-pressed="false">Sin asignar</button>
+    <label class="toggle"><input type="checkbox" id="hide"> Ocultar las hechas</label>
+    </div>
+    <div class="hrow" id="hrow" aria-label="Filtrar por quién apoya"></div>
+  </div>
+
+  <main id="list"></main>
+  <footer>la fusión del año · 3 de octubre</footer>
+</div>
+
+<script>
+window.fbReady = new Promise(r => window.__fbResolve = r);
+const AREAS = [
+  ["rec","Recepción y guest book"],["pb","Photo booth"],["cer","Ceremonia"],["bar","Bar de ceremonia"],
+  ["hie","Hielo"],["agu","Aguas y meseros"],["com","Comida (OB)"],["pas","Pastel"],
+  ["dec","Decoración e iluminación"],["mus","Música y momentos"],["cre","Creativo"],["log","Logística y finanzas"]
+];
+// [id, área, tarea, quién (A/M/AM/N), nota, urgente]
+const T = [
+ ["r1","rec","Mesa y mantel: etiquetar y apartar en casa","M","Se llevan el martes"],
+ ["r2","rec","Guest book","A","Llega el lunes, se lleva el martes"],
+ ["r3","rec","Cuadro de Jaime Levin","A"],
+ ["r4","rec","Plumas de recuerdo de Karla","M","Karla las lleva el sábado"],
+ ["r5","rec","Plumas de colores, florero y cinta doble cara","M","La cinta es para pegar las fotos"],
+ ["r6","rec","Caja para sobres y nota sobre la ayuda en efectivo","A"],
+ ["r7","rec","Sobres blancos","M"],
+ ["r8","rec","Mandar a Andrés el prompt de la impresora de tickets","A"],
+ ["r9","rec","Recoger la etiquetadora","A","Es térmica: nada de sol"],
+ ["r10","rec","Handycam cargada para felicitaciones en video","A","Es delicada"],
+ ["r11","rec","Persona a cargo de la mesa hasta la ceremonia","A","¿De su equipo o alguien más?"],
+ ["r12","rec","2 Sonos en el acceso con la playlist M & A Pre party","A","Decirle a Karen dónde van"],
+ ["r13","rec","Extensión para la mesa","M"],
+ ["p1","pb","Confirmar photo booth con Alfredo Ortiz","A"],
+ ["p2","pb","Confirmar horario y quién ayuda en el área","A"],
+ ["p3","pb","Llevar la estructura de Maylet","A"],
+ ["p4","pb","2 luces de estudio con su extensión","A"],
+ ["p5","pb","Colocar las telas","A","Viernes"],
+ ["p6","pb","Tijeras por si acaso","M"],
+ ["c1","cer","60 sillas blancas y sillas de novios con “just married”","M","Sin banca ni otros adornos"],
+ ["c2","cer","Jarrones decorados al inicio del pasillo","M"],
+ ["c3","cer","Colgar “Bienvenidos a nuestra boda”","M","¿Hay escalera en el lugar?"],
+ ["c4","cer","Zona de pétalos: mesa, tela y canastas","M"],
+ ["c5","cer","Vasitos y pulseras de la ceremonia","M","Delegar su elaboración"],
+ ["c6","cer","Llevar la base amarilla del altar","A","Entre martes y viernes"],
+ ["c7","cer","Colocar las flores del altar","M"],
+ ["c8","cer","Hacer y pagar el pedido de flores","M","",1],
+ ["c9","cer","Armar floreros con las chicas","M","Viernes"],
+ ["c10","cer","Confirmar día y hora del ensayo","M","¿Puede ser martes?",1],
+ ["c11","cer","Llevar audio al ensayo","A"],
+ ["b1","bar","Confirmar insumos con el tío","A","Mezcalitas, margaritas y mojitos para 400"],
+ ["b2","bar","Pedir el mezcal a Lilia","A","Se necesita esta semana",1],
+ ["b3","bar","Pedir los vasos que falten","A"],
+ ["b4","bar","Que el papá de Alfredo compre lo que falte","A","Que lo deje en casa de Mitzi"],
+ ["b5","bar","Llevar el bar de Ale","A","Miércoles",1],
+ ["b6","bar","Pedir a Ale la lámpara del bar","A"],
+ ["b7","bar","Extensión para el bar","A"],
+ ["b8","bar","Montaje visual del bar","A","¿Vasos etiquetados?"],
+ ["b9","bar","Tina de Laurita para los boings","M","Que la lleve a casa de Mitzi"],
+ ["b10","bar","Mesa alta de herrería de Ale","M"],
+ ["b11","bar","Agitadores con caras de bebé","M"],
+ ["b12","bar","Llevar boings y agua de Sam’s","A"],
+ ["h1","hie","Calcular bolsas para bebidas frías y cocteles","A","Considerar una sola hielera"],
+ ["h2","hie","Comprar todo el hielo","M"],
+ ["h3","hie","Preguntar si lo entregan en el lugar con hielera","M"],
+ ["h4","hie","Hielera de May, si hace falta","A","Que la deje en el loft"],
+ ["h5","hie","En el banquete: cambiar hielera y tina a cerveza","A"],
+ ["w1","agu","Cerrar contrato de meseros","M","Todos de negro, sin corbata ni camisa",1],
+ ["w2","agu","Agua fresca lista al salir de la ceremonia","M"],
+ ["w3","agu","Aguas por tiempos y horchata final","A"],
+ ["w4","agu","Decidir: agua simple servida o en las mesas","A"],
+ ["w5","agu","Llevar garrafones","A"],
+ ["w6","agu","Jarras según el número de meseros","A"],
+ ["w7","agu","Explicar a Karen la dinámica del agua","A"],
+ ["w8","agu","Decidir si se rentan manteles","M"],
+ ["w9","agu","Decidir cómo se colocan los recuerdos","A"],
+ ["o1","com","Reunión con OB y Karen sobre la dinámica","A"],
+ ["o2","com","Confirmar horario de servicio de OB","A"],
+ ["o3","com","Preguntar si usarán todo el refri y congelador","A","OB lleva su refri"],
+ ["o4","com","Inventario de platos y entregarlos a OB","M"],
+ ["o5","com","Apartar 30 en sobre para OB","M"],
+ ["o6","com","Hacer los menús","A"],
+ ["o7","com","40 soportes para menús","A"],
+ ["o8","com","Tanque de gas","A"],
+ ["k1","pas","Pagar el pastel","A","",1],
+ ["k2","pas","Recoger el pastel y pasar el contacto a Karen","A"],
+ ["k3","pas","Confirmar medidas de los refris con Sebas","A","40×50×50 cm e industrial"],
+ ["k4","pas","Preguntar si llega precortado","A"],
+ ["k5","pas","Avisar a Karen que lo cortan los meseros","M","El decorativo es para la foto"],
+ ["k6","pas","Platitos y tenedores desechables","A"],
+ ["k7","pas","Cuchillos para el pastel","M"],
+ ["k8","pas","Mover la mesa del guest book para el pastel","M"],
+ ["k9","pas","Poner la playlist pre party en el pastel","A"],
+ ["d1","dec","Llevar los 4 bancos del loft a la entrada","A"],
+ ["d2","dec","Tela y decoración de los sillones","M"],
+ ["d3","dec","Pedir a Ale lámparas y reflectores","A"],
+ ["d4","dec","Reflector apuntando a los sillones","M"],
+ ["d5","dec","Extensión para el reflector","A"],
+ ["d6","dec","Músicos: alfombras, buró y lámpara de Mitzi","M"],
+ ["d7","dec","Músicos: buró y lámparas de Alfredo y Ale","A"],
+ ["d8","dec","Línea de contactos de Char","M"],
+ ["d9","dec","Decidir si se decora el toldo","M","Transparente se ve bien"],
+ ["d10","dec","Iluminación puntual del toldo","A","Viernes en la noche"],
+ ["d11","dec","Compartir cómo debe verse la instalación de lámparas","M"],
+ ["m1","mus","Confirmar quién hace el sound check","A","9 am del día de la boda"],
+ ["m2","mus","Consola alterna para las bandas","A","¿Cuántas líneas?"],
+ ["m3","mus","Playlist de baile","AM"],
+ ["m4","mus","Playlist de atmósfera","AM"],
+ ["m5","mus","Canción del ramo al DJ o a Karen","M","El novio no avienta corbata"],
+ ["m6","mus","Canción del baile con papás","A"],
+ ["m7","mus","Ensayar el baile de novios en el lugar","N"],
+ ["m8","mus","Pedir palabras a Alex","A"],
+ ["m9","mus","Pedir palabras a Emi","M"],
+ ["m10","mus","6 toritos","A"],
+ ["e1","cre","Identidad gráfica","A"],
+ ["e2","cre","Escribir postales y decidir cómo entregarlas","A"],
+ ["e3","cre","Decidir a quién dar cámaras desechables","A"],
+ ["e4","cre","Stickers y sillas reservadas con Susan","M"],
+ ["e5","cre","Pasar a Vedna detalles e identidad gráfica","N"],
+ ["l1","log","Lista final de invitados con nombres completos","AM","",1],
+ ["l2","log","Acomodo y mapa de invitados para Karen","AM","",1],
+ ["l3","log","Definir y contratar pista de baile","M","",1],
+ ["l4","log","Tacos al pastor para 80 (tornaboda)","M","",1],
+ ["l5","log","Confirmar equipo de montaje con Karen","M"],
+ ["l6","log","Trazar ubicaciones exactas","N"],
+ ["l7","log","Revisar el runsheet","A"],
+ ["l8","log","Descamoche","M"],
+ ["l9","log","Asignar responsable de desmontaje","N"],
+ ["l10","log","Lista de cosas que regresan","N","Incluye préstamos"],
+ ["l11","log","Corte de gastos y dinero","AM"],
+ ["l12","log","Pago de cada proveedor en su sobre","N","",1]
+];
+// Quién apoya o está involucrado en cada tarea
+const H = {
+ r4:["Karla"], r8:["Andrés"], r11:["Karen"], r12:["Karen"],
+ p1:["Alfredo Ortiz"], p3:["Alex","Maylet"], p4:["Alex"], p5:["Mitzi"],
+ c5:["Dianita"], c9:["Las chicas"], c10:["Karen"],
+ b1:["Tío"], b2:["Lilia"], b4:["Papá de Alfredo"], b5:["Alex","Ale"], b6:["Mitzi","Ale"], b7:["Alex"],
+ b9:["Laurita"], b10:["Ale"], b12:["Mitzi"],
+ h4:["May"],
+ w7:["Karen"],
+ o1:["Karen","OB"], o2:["OB"], o3:["OB"], o4:["OB"], o5:["OB"],
+ k2:["Karen"], k3:["Sebas"], k4:["Sebas"], k5:["Karen"],
+ d3:["Ale"], d4:["Ale"], d7:["Ale"], d8:["Char"],
+ m5:["Karen"], m8:["Alex"], m9:["Emi"],
+ e4:["Susan"], e5:["Vedna"],
+ l2:["Karen"], l5:["Karen"]
+};
+const WHO = {A:"Alfredo",M:"Mitzi",AM:"Los dos",N:"Sin asignar"};
+const LS = "ma-checklist", LSC = "ma-checklist-custom";
+let done = {}, custom = [];
+try { done = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch(e){ done = {}; }
+try { custom = JSON.parse(localStorage.getItem(LSC) || "[]") || []; } catch(e){ custom = []; }
+let filter = "all", helper = null, hideDone = false, db = null, newWho = "A";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// tarea personalizada: {id, area, text, who, note, urg, help:[]}
+const all = () => T.concat(custom.map(c => [c.id, c.area, c.text, c.who, c.note||"", c.urg?1:0, c.help||[], 1]));
+const helpersOf = t => H[t[0]] || t[6] || [];
+
+function visible(t){
+  if (filter !== "all"){
+    if (filter === "N" ? t[3] !== "N" : !(t[3] === filter || t[3] === "AM")) return false;
+  }
+  if (helper && !helpersOf(t).includes(helper)) return false;
+  if (hideDone && done[t[0]]) return false;
+  return true;
+}
+function rowHTML(t){
+  const d = !!done[t[0]], hp = helpersOf(t);
+  return `<li class="row${d?" done":""}" tabindex="0" role="checkbox" aria-checked="${d}" data-id="${t[0]}">
+    <span class="box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>
+    <span class="task"><span class="t">${esc(t[2])}</span>${t[4]?`<span class="note">${esc(t[4])}</span>`:""}${hp.length?`<span class="help">con ${esc(hp.join(", "))}</span>`:""}${t[7]?`<button class="del" data-del="${t[0]}">Eliminar</button>`:""}</span>
+    <span class="who ${t[3]}">${WHO[t[3]]}</span></li>`;
+}
+function sectionHTML(key, title, items, extra){
+  const vis = items.filter(visible);
+  const n = items.filter(t => done[t[0]]).length;
+  if (!items.length || (!vis.length && (filter !== "all" || helper))) return "";
+  const complete = n === items.length;
+  return `<section class="${extra||""}${complete?" complete":""}" data-sec="${key}">
+    <h2>${esc(title)} <span class="count">${n}/${items.length}</span><span class="done-tag">fusionada</span></h2>
+    <ul>${vis.length ? vis.map(rowHTML).join("") : `<li class="empty">Todo listo aquí.</li>`}</ul></section>`;
+}
+function itemsOf(k){ const A = all(); return k === "urg" ? A.filter(t => t[5]) : A.filter(t => t[1] === k); }
+function render(){
+  let h = sectionHTML("urg","Urgente esta semana", itemsOf("urg"), "urg");
+  for (const [k,title] of AREAS) h += sectionHTML(k, title, itemsOf(k));
+  $("#list").innerHTML = h;
+  updateMeter(); buildHelpers();
+}
+function updateMeter(){
+  const A = all(), n = A.filter(t => done[t[0]]).length, p = A.length ? Math.round(n / A.length * 100) : 0;
+  $("#fill").style.width = p + "%";
+  $("#pct").textContent = p + "%";
+  $("#cnt").textContent = `${n} de ${A.length} listas`;
+  $("#meter").setAttribute("aria-valuenow", p);
+}
+function countdown(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = Math.round((new Date(2026,9,3) - today) / 864e5);
+  $("#sub").innerHTML = days > 1 ? `qué rollo con la boda: faltan <b>${days} días</b>`
+    : days === 1 ? `qué rollo con la boda: es <b>mañana</b>`
+    : days === 0 ? `qué rollo con la boda: es <b>hoy</b>` : `qué rollo con la boda: <b>ya fue</b>`;
+}
+function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify(done)); localStorage.setItem(LSC, JSON.stringify(custom)); } catch(e){} }
+
+async function toggle(id){
+  done[id] = !done[id];
+  saveLocal();
+  document.querySelectorAll(`.row[data-id="${id}"]`).forEach(r => {
+    r.classList.toggle("done", !!done[id]); r.setAttribute("aria-checked", !!done[id]);
+  });
+  refreshCounts();
+  if (hideDone && done[id]) setTimeout(render, 600);
+  if (db){
+    try { await db.collection("checks").doc(id).set({done: !!done[id], at: Date.now()}); }
+    catch(e){ $("#sync").textContent = "No se pudo guardar el cambio para todos. Se quedó en este navegador."; }
+  }
+}
+function refreshCounts(){
+  document.querySelectorAll("section[data-sec]").forEach(s => {
+    const items = itemsOf(s.dataset.sec);
+    const n = items.filter(t => done[t[0]]).length;
+    s.querySelector(".count").textContent = `${n}/${items.length}`;
+    s.classList.toggle("complete", n === items.length);
+  });
+  updateMeter();
+}
+
+// Filtro de apoyo (se recalcula al agregar tareas)
+function buildHelpers(){
+  const c = {};
+  all().forEach(t => helpersOf(t).forEach(n => c[n] = (c[n]||0) + 1));
+  const names = Object.keys(c).sort((a,b) => c[b]-c[a] || a.localeCompare(b,"es"));
+  if (helper && !c[helper]) helper = null;
+  $("#hrow").innerHTML = `<span class="lbl">con</span>` + names.map(n => `<button class="chip" aria-pressed="${n===helper}" data-h="${esc(n)}">${esc(n)} <span style="opacity:.6">${c[n]}</span></button>`).join("");
+  $("#helpList").innerHTML = names.map(n => `<option value="${esc(n)}">`).join("");
+}
+$("#hrow").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  helper = helper === b.dataset.h ? null : b.dataset.h;
+  render();
+});
+
+$("#list").addEventListener("click", e => {
+  const del = e.target.closest(".del");
+  if (del){ e.stopPropagation(); removeTask(del.dataset.del); return; }
+  const r = e.target.closest(".row"); if (r) toggle(r.dataset.id);
+});
+$("#list").addEventListener("keydown", e => {
+  if (e.target.closest(".del")) return;
+  const r = e.target.closest(".row"); if (r && (e.key === " " || e.key === "Enter")){ e.preventDefault(); toggle(r.dataset.id); }
+});
+document.querySelectorAll("#rrow .chip").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.f;
+  document.querySelectorAll("#rrow .chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+}));
+$("#hide").addEventListener("change", e => { hideDone = e.target.checked; render(); });
+
+// Formulario de nueva tarea
+$("#fArea").innerHTML = AREAS.map(([k,t]) => `<option value="${k}">${esc(t)}</option>`).join("");
+function openForm(open){
+  $("#form").classList.toggle("open", open);
+  $("#openForm").style.display = open ? "none" : "";
+  $("#openForm").setAttribute("aria-expanded", open);
+  if (open) $("#fText").focus();
+}
+$("#openForm").addEventListener("click", () => openForm(true));
+$("#closeForm").addEventListener("click", () => openForm(false));
+$("#fWho").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  newWho = b.dataset.w;
+  $("#fWho").querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = $("#fText").value.trim();
+  if (!text){ $("#fErr").textContent = "Escribe la tarea para agregarla."; return; }
+  $("#fErr").textContent = "";
+  const task = {
+    id: "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    area: $("#fArea").value, text, who: newWho,
+    note: $("#fNote").value.trim(), urg: $("#fUrg").checked,
+    help: $("#fHelp").value.split(",").map(x => x.trim()).filter(Boolean).map(x => x[0].toUpperCase() + x.slice(1)),
+    at: Date.now()
+  };
+  custom.push(task); saveLocal(); render();
+  $("#fText").value = ""; $("#fNote").value = ""; $("#fHelp").value = ""; $("#fUrg").checked = false;
+  openForm(false);
+  const row = document.querySelector(`.row[data-id="${task.id}"]`);
+  if (row){ row.scrollIntoView({block:"center", behavior:"smooth"}); row.focus({preventScroll:true}); }
+  if (db){
+    try { const {id, ...data} = task; await db.collection("tasks").doc(id).set(data); }
+    catch(err){ $("#sync").textContent = "La tarea se guardó solo en este navegador."; }
+  }
+});
+async function removeTask(id){
+  const t = custom.find(c => c.id === id); if (!t) return;
+  if (!confirm(`¿Eliminar “${t.text}”?`)) return;
+  custom = custom.filter(c => c.id !== id); delete done[id]; saveLocal(); render();
+  if (db){
+    try { await db.collection("tasks").doc(id).delete(); await db.collection("checks").doc(id).delete(); }
+    catch(err){ $("#sync").textContent = "No se pudo eliminar para todos."; }
+  }
+}
+
+countdown(); render();
+$("#sync").textContent = "Conectando…";
+
+(async () => {
+  db = await Promise.race([window.fbReady, new Promise(r => setTimeout(() => r(null), 8000))]);
+  if (!db){ $("#sync").textContent = "Sin conexión a la lista compartida. Los cambios se guardan en este navegador."; return; }
+  $("#sync").textContent = "Sincronizando…";
+  const ok = () => { $("#sync").textContent = "Sincronizado: lo que marque o agregue uno lo ve el otro."; };
+  const fail = () => { $("#sync").textContent = "Sin conexión a la lista compartida. Los cambios se guardan en este navegador."; };
+  db.collection("checks").onSnapshot(snap => {
+    const next = {};
+    snap.docs.forEach(d => { const v = d.data(); if (v && v.done) next[d.id] = true; });
+    done = next; saveLocal(); render(); ok();
+  }, fail);
+  db.collection("tasks").orderBy("at").onSnapshot(snap => {
+    custom = snap.docs.map(d => {
+      const v = d.data() || {};
+      return {id: d.id, area: AREAS.some(a => a[0] === v.area) ? v.area : "log", text: String(v.text || ""),
+        who: WHO[v.who] ? v.who : "N", note: String(v.note || ""), urg: !!v.urg,
+        help: Array.isArray(v.help) ? v.help.map(String) : [], at: v.at || 0};
+    }).filter(c => c.text);
+    saveLocal(); render(); ok();
+  }, fail);
+})();
+</script>
+<!-- ================================================================
+  PASO ÚNICO: pega aquí tu firebaseConfig de Firebase
+  (Consola de Firebase > Configuración del proyecto > Tus apps > Web)
+================================================================= -->
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyAeM3m3xKBlIsC51uVPQS5DN2Vix-Rim5w",
+  authDomain: "boda-ma.firebaseapp.com",
+  projectId: "boda-ma",
+  storageBucket: "boda-ma.firebasestorage.app",
+  messagingSenderId: "998035574616",
+  appId: "1:998035574616:web:eaa44d88ef3e841e881f2d"
+};
+// ================================================================
+
+try {
+  if (firebaseConfig.projectId === "PEGA_AQUI") throw new Error("Falta la configuración de Firebase");
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const F = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  const fs = F.getFirestore(initializeApp(firebaseConfig));
+  // Adaptador con la misma forma que usa la página
+  const col = name => ({
+    doc: id => ({
+      set: data => F.setDoc(F.doc(fs, name, id), data),
+      delete: () => F.deleteDoc(F.doc(fs, name, id))
+    }),
+    onSnapshot: (next, err) => F.onSnapshot(F.collection(fs, name), next, err),
+    orderBy: field => ({ onSnapshot: (next, err) => F.onSnapshot(F.query(F.collection(fs, name), F.orderBy(field)), next, err) })
+  });
+  window.__fbResolve({ collection: col });
+} catch (e) {
+  console.warn(e.message);
+  window.__fbResolve(null);
+}
+</script>
+</body>
+</html>
