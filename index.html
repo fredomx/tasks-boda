@@ -85,7 +85,7 @@ section.urg .help{color:#B02F74}
 .hrow .chip[aria-pressed="true"]{background:var(--bugambilia);color:var(--tinta);border-color:var(--bugambilia)}
 .rrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
 .addbtn{font:800 16px var(--sans);background:var(--fg);color:var(--bg);border:0;border-radius:999px;padding:12px 20px;cursor:pointer;margin-top:14px}
-.addbtn:focus-visible,.form button:focus-visible,.form input:focus-visible,.form select:focus-visible,.del:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
+.addbtn:focus-visible,.form button:focus-visible,.form input:focus-visible,.form select:focus-visible,.act:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
 .form{display:none;margin-top:14px;background:var(--card);border:2px solid var(--fg);border-radius:22px;padding:18px}
 .form.open{display:grid;gap:12px}
 .form label{display:grid;gap:4px;font-size:14px;font-weight:600}
@@ -97,7 +97,8 @@ section.urg .help{color:#B02F74}
 .form .urgck input{accent-color:var(--profundo);width:18px;height:18px}
 .form .actions{display:flex;gap:10px;flex-wrap:wrap}
 .form .err{color:var(--profundo);font-size:14px;min-height:1em;margin:0}
-.del{background:none;border:0;color:var(--muted);font:600 13px var(--sans);cursor:pointer;padding:0;margin-top:4px;text-decoration:underline}
+.acts{display:flex;gap:14px;margin-top:4px}
+.act{background:none;border:0;color:var(--muted);font:600 13px var(--sans);cursor:pointer;padding:0;text-decoration:underline}
 .mine{font:400 13px var(--serif);font-style:italic;color:var(--muted)}
 @media (max-width:480px){ .form .two{grid-template-columns:1fr} }
 .empty{font-family:var(--serif);font-size:20px;color:var(--muted);padding:12px 4px}
@@ -135,7 +136,7 @@ footer{margin-top:48px;font-family:var(--serif);font-size:18px;color:var(--muted
       <label>Nota (opcional)<input type="text" id="fNote" maxlength="140"></label>
       <label class="urgck"><input type="checkbox" id="fUrg"> Es urgente</label>
       <p class="err" id="fErr"></p>
-      <div class="actions"><button class="addbtn" type="submit" style="margin:0">Agregar tarea</button>
+      <div class="actions"><button class="addbtn" type="submit" id="fSubmit" style="margin:0">Agregar tarea</button>
         <button type="button" class="chip" id="closeForm">Cancelar</button></div>
     </form>
   </header>
@@ -293,17 +294,24 @@ const H = {
  l2:["Karen"], l5:["Karen"]
 };
 const WHO = {A:"Alfredo",M:"Mitzi",AM:"Los dos",N:"Sin asignar"};
-const LS = "ma-checklist", LSC = "ma-checklist-custom";
-let done = {}, custom = [];
+const LS = "ma-checklist", LSC = "ma-checklist-custom", LSO = "ma-checklist-over";
+const BASE = new Set(T.map(t => t[0]));
+let done = {}, custom = [], over = {};
 try { done = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch(e){ done = {}; }
 try { custom = JSON.parse(localStorage.getItem(LSC) || "[]") || []; } catch(e){ custom = []; }
-let filter = "all", helper = null, hideDone = false, db = null, newWho = "A";
+try { over = JSON.parse(localStorage.getItem(LSO) || "{}") || {}; } catch(e){ over = {}; }
+let filter = "all", helper = null, hideDone = false, db = null, newWho = "A", editingId = null;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // tarea personalizada: {id, area, text, who, note, urg, help:[]}
-const all = () => T.concat(custom.map(c => [c.id, c.area, c.text, c.who, c.note||"", c.urg?1:0, c.help||[], 1]));
-const helpersOf = t => H[t[0]] || t[6] || [];
+// over: cambios a tareas de la lista base, {id: {area, text, who, note, urg, help} | {deleted:true}}
+const all = () => T.filter(t => !(over[t[0]] && over[t[0]].deleted)).map(t => {
+  const o = over[t[0]];
+  return o ? [t[0], o.area, o.text, o.who, o.note||"", o.urg?1:0, o.help||[]] : [t[0], t[1], t[2], t[3], t[4]||"", t[5]||0, H[t[0]]||[]];
+}).concat(custom.map(c => [c.id, c.area, c.text, c.who, c.note||"", c.urg?1:0, c.help||[]]));
+const findTask = id => all().find(t => t[0] === id);
+const helpersOf = t => t[6] || [];
 
 function visible(t){
   if (filter !== "all"){
@@ -317,7 +325,7 @@ function rowHTML(t){
   const d = !!done[t[0]], hp = helpersOf(t);
   return `<li class="row${d?" done":""}" tabindex="0" role="checkbox" aria-checked="${d}" data-id="${t[0]}">
     <span class="box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>
-    <span class="task"><span class="t">${esc(t[2])}</span>${t[4]?`<span class="note">${esc(t[4])}</span>`:""}${hp.length?`<span class="help">con ${esc(hp.join(", "))}</span>`:""}${t[7]?`<button class="del" data-del="${t[0]}">Eliminar</button>`:""}</span>
+    <span class="task"><span class="t">${esc(t[2])}</span>${t[4]?`<span class="note">${esc(t[4])}</span>`:""}${hp.length?`<span class="help">con ${esc(hp.join(", "))}</span>`:""}<span class="acts"><button class="act" data-edit="${t[0]}">Editar</button><button class="act" data-del="${t[0]}">Eliminar</button></span></span>
     <span class="who ${t[3]}">${WHO[t[3]]}</span></li>`;
 }
 function sectionHTML(key, title, items, extra){
@@ -350,7 +358,7 @@ function countdown(){
     : days === 1 ? `qué rollo con la boda: es <b>mañana</b>`
     : days === 0 ? `qué rollo con la boda: es <b>hoy</b>` : `qué rollo con la boda: <b>ya fue</b>`;
 }
-function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify(done)); localStorage.setItem(LSC, JSON.stringify(custom)); } catch(e){} }
+function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify(done)); localStorage.setItem(LSC, JSON.stringify(custom)); localStorage.setItem(LSO, JSON.stringify(over)); } catch(e){} }
 
 async function toggle(id){
   done[id] = !done[id];
@@ -391,12 +399,12 @@ $("#hrow").addEventListener("click", e => {
 });
 
 $("#list").addEventListener("click", e => {
-  const del = e.target.closest(".del");
-  if (del){ e.stopPropagation(); removeTask(del.dataset.del); return; }
+  const act = e.target.closest(".act");
+  if (act){ e.stopPropagation(); act.dataset.edit ? startEdit(act.dataset.edit) : removeTask(act.dataset.del); return; }
   const r = e.target.closest(".row"); if (r) toggle(r.dataset.id);
 });
 $("#list").addEventListener("keydown", e => {
-  if (e.target.closest(".del")) return;
+  if (e.target.closest(".act")) return;
   const r = e.target.closest(".row"); if (r && (e.key === " " || e.key === "Enter")){ e.preventDefault(); toggle(r.dataset.id); }
 });
 document.querySelectorAll("#rrow .chip").forEach(b => b.addEventListener("click", () => {
@@ -408,7 +416,18 @@ $("#hide").addEventListener("change", e => { hideDone = e.target.checked; render
 
 // Formulario de nueva tarea
 $("#fArea").innerHTML = AREAS.map(([k,t]) => `<option value="${k}">${esc(t)}</option>`).join("");
+function resetForm(){
+  editingId = null;
+  $("#fText").value = ""; $("#fNote").value = ""; $("#fHelp").value = ""; $("#fUrg").checked = false;
+  $("#fErr").textContent = ""; $("#fSubmit").textContent = "Agregar tarea";
+  setWho("A");
+}
+function setWho(w){
+  newWho = w;
+  $("#fWho").querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.w === w));
+}
 function openForm(open){
+  if (!open) resetForm();
   $("#form").classList.toggle("open", open);
   $("#openForm").style.display = open ? "none" : "";
   $("#openForm").setAttribute("aria-expanded", open);
@@ -417,38 +436,65 @@ function openForm(open){
 $("#openForm").addEventListener("click", () => openForm(true));
 $("#closeForm").addEventListener("click", () => openForm(false));
 $("#fWho").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  newWho = b.dataset.w;
-  $("#fWho").querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  const b = e.target.closest(".chip"); if (b) setWho(b.dataset.w);
 });
+function startEdit(id){
+  const t = findTask(id); if (!t) return;
+  resetForm(); editingId = id;
+  $("#fText").value = t[2]; $("#fArea").value = t[1]; $("#fNote").value = t[4];
+  $("#fHelp").value = helpersOf(t).join(", "); $("#fUrg").checked = !!t[5]; setWho(t[3]);
+  $("#fSubmit").textContent = "Guardar cambios";
+  openForm(true);
+  $("#form").scrollIntoView({block:"center", behavior:"smooth"});
+}
 $("#form").addEventListener("submit", async e => {
   e.preventDefault();
   const text = $("#fText").value.trim();
   if (!text){ $("#fErr").textContent = "Escribe la tarea para agregarla."; return; }
   $("#fErr").textContent = "";
-  const task = {
-    id: "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+  const fields = {
     area: $("#fArea").value, text, who: newWho,
     note: $("#fNote").value.trim(), urg: $("#fUrg").checked,
-    help: $("#fHelp").value.split(",").map(x => x.trim()).filter(Boolean).map(x => x[0].toUpperCase() + x.slice(1)),
-    at: Date.now()
+    help: $("#fHelp").value.split(",").map(x => x.trim()).filter(Boolean).map(x => x[0].toUpperCase() + x.slice(1))
   };
-  custom.push(task); saveLocal(); render();
-  $("#fText").value = ""; $("#fNote").value = ""; $("#fHelp").value = ""; $("#fUrg").checked = false;
+  const editId = editingId;
+  let id, data;
+  if (!editId){
+    id = "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    data = {...fields, at: Date.now()};
+    custom.push({id, ...data});
+  } else if (BASE.has(editId)){
+    // Los cambios a tareas base se guardan como documento en "tasks" con el mismo id
+    id = editId; data = {...fields, at: Date.now()};
+    over[id] = fields;
+  } else {
+    const c = custom.find(c => c.id === editId); if (!c){ openForm(false); return; }
+    Object.assign(c, fields);
+    ({id, ...data} = c);
+  }
+  saveLocal(); render();
   openForm(false);
-  const row = document.querySelector(`.row[data-id="${task.id}"]`);
+  const row = document.querySelector(`.row[data-id="${id}"]`);
   if (row){ row.scrollIntoView({block:"center", behavior:"smooth"}); row.focus({preventScroll:true}); }
   if (db){
-    try { const {id, ...data} = task; await db.collection("tasks").doc(id).set(data); }
-    catch(err){ $("#sync").textContent = "La tarea se guardó solo en este navegador."; }
+    try { await db.collection("tasks").doc(id).set(data); }
+    catch(err){ $("#sync").textContent = editId ? "El cambio se guardó solo en este navegador." : "La tarea se guardó solo en este navegador."; }
   }
 });
 async function removeTask(id){
-  const t = custom.find(c => c.id === id); if (!t) return;
-  if (!confirm(`¿Eliminar “${t.text}”?`)) return;
-  custom = custom.filter(c => c.id !== id); delete done[id]; saveLocal(); render();
+  const t = findTask(id); if (!t) return;
+  if (!confirm(`¿Eliminar “${t[2]}”?`)) return;
+  const base = BASE.has(id);
+  if (base) over[id] = {deleted: true}; else custom = custom.filter(c => c.id !== id);
+  delete done[id]; saveLocal();
+  if (editingId === id) openForm(false);
+  render();
   if (db){
-    try { await db.collection("tasks").doc(id).delete(); await db.collection("checks").doc(id).delete(); }
+    try {
+      if (base) await db.collection("tasks").doc(id).set({deleted: true, at: Date.now()});
+      else await db.collection("tasks").doc(id).delete();
+      await db.collection("checks").doc(id).delete();
+    }
     catch(err){ $("#sync").textContent = "No se pudo eliminar para todos."; }
   }
 }
@@ -460,7 +506,7 @@ $("#sync").textContent = "Conectando…";
   db = await Promise.race([window.fbReady, new Promise(r => setTimeout(() => r(null), 8000))]);
   if (!db){ $("#sync").textContent = "Sin conexión a la lista compartida. Los cambios se guardan en este navegador."; return; }
   $("#sync").textContent = "Sincronizando…";
-  const ok = () => { $("#sync").textContent = "Sincronizado: lo que marque o agregue uno lo ve el otro."; };
+  const ok = () => { $("#sync").textContent = "Sincronizado: lo que marque, agregue o edite uno lo ve el otro."; };
   const fail = () => { $("#sync").textContent = "Sin conexión a la lista compartida. Los cambios se guardan en este navegador."; };
   db.collection("checks").onSnapshot(snap => {
     const next = {};
@@ -468,12 +514,17 @@ $("#sync").textContent = "Conectando…";
     done = next; saveLocal(); render(); ok();
   }, fail);
   db.collection("tasks").orderBy("at").onSnapshot(snap => {
-    custom = snap.docs.map(d => {
+    const nextCustom = [], nextOver = {};
+    snap.docs.forEach(d => {
       const v = d.data() || {};
-      return {id: d.id, area: AREAS.some(a => a[0] === v.area) ? v.area : "log", text: String(v.text || ""),
+      if (BASE.has(d.id) && v.deleted){ nextOver[d.id] = {deleted: true}; return; }
+      const c = {area: AREAS.some(a => a[0] === v.area) ? v.area : "log", text: String(v.text || ""),
         who: WHO[v.who] ? v.who : "N", note: String(v.note || ""), urg: !!v.urg,
-        help: Array.isArray(v.help) ? v.help.map(String) : [], at: v.at || 0};
-    }).filter(c => c.text);
+        help: Array.isArray(v.help) ? v.help.map(String) : []};
+      if (!c.text) return;
+      if (BASE.has(d.id)) nextOver[d.id] = c; else nextCustom.push({id: d.id, ...c, at: v.at || 0});
+    });
+    custom = nextCustom; over = nextOver;
     saveLocal(); render(); ok();
   }, fail);
 })();
