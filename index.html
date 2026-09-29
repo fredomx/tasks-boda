@@ -83,6 +83,10 @@ section.urg .help{color:#B02F74}
 .hrow .lbl{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--muted);white-space:nowrap;margin-right:2px}
 .hrow .chip{font-size:13px;padding:5px 11px;white-space:nowrap;border-color:var(--bugambilia)}
 .hrow .chip[aria-pressed="true"]{background:var(--bugambilia);color:var(--tinta);border-color:var(--bugambilia)}
+.drow .chip{border-color:var(--cielo)}
+.drow .chip[aria-pressed="true"]{background:var(--cielo);color:var(--tinta);border-color:var(--cielo)}
+.drow .chip .hoy{font:400 12px var(--serif);font-style:italic;opacity:.75}
+.dia{display:inline-block;font:600 12px var(--sans);border:1.5px solid var(--cielo);border-radius:999px;padding:1px 8px;margin-top:4px}
 .rrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
 .addbtn{font:800 16px var(--sans);background:var(--fg);color:var(--bg);border:0;border-radius:999px;padding:12px 20px;cursor:pointer;margin-top:14px}
 .addbtn:focus-visible,.form button:focus-visible,.form input:focus-visible,.form select:focus-visible,.act:focus-visible{outline:3px solid var(--cielo);outline-offset:2px}
@@ -133,7 +137,10 @@ footer{margin-top:48px;font-family:var(--serif);font-size:18px;color:var(--muted
           <button type="button" class="chip" data-w="AM" aria-pressed="false">Los dos</button>
           <button type="button" class="chip" data-w="N" aria-pressed="false">Sin asignar</button>
         </div></div>
-      <label>Nota (opcional)<input type="text" id="fNote" maxlength="140"></label>
+      <div class="two">
+        <label>Día<select id="fDay"></select></label>
+        <label>Nota (opcional)<input type="text" id="fNote" maxlength="140"></label>
+      </div>
       <label class="urgck"><input type="checkbox" id="fUrg"> Es urgente</label>
       <p class="err" id="fErr"></p>
       <div class="actions"><button class="addbtn" type="submit" id="fSubmit" style="margin:0">Agregar tarea</button>
@@ -149,6 +156,7 @@ footer{margin-top:48px;font-family:var(--serif);font-size:18px;color:var(--muted
     <button class="chip" data-f="N" aria-pressed="false">Sin asignar</button>
     <label class="toggle"><input type="checkbox" id="hide"> Ocultar las hechas</label>
     </div>
+    <div class="hrow drow" id="drow" aria-label="Filtrar por día"></div>
     <div class="hrow" id="hrow" aria-label="Filtrar por quién apoya"></div>
   </div>
 
@@ -293,6 +301,11 @@ const H = {
  e4:["Susan"], e5:["Vedna"],
  l2:["Karen"], l5:["Karen"]
 };
+// Días de la semana de la boda (clave = fecha local)
+const DAYS = [["2026-09-29","Mar 29"],["2026-09-30","Mié 30"],["2026-10-01","Jue 1"],["2026-10-02","Vie 2"],["2026-10-03","Sáb 3"],["2026-10-04","Dom 4"]];
+const DAYNAME = Object.fromEntries(DAYS);
+// Día sugerido para tareas base (según su nota)
+const D = { r1:"2026-09-29", r2:"2026-09-29", p5:"2026-10-02", c9:"2026-10-02", b5:"2026-09-30", d10:"2026-10-02", m1:"2026-10-03", r4:"2026-10-03" };
 const WHO = {A:"Alfredo",M:"Mitzi",AM:"Los dos",N:"Sin asignar"};
 const LS = "ma-checklist", LSC = "ma-checklist-custom", LSO = "ma-checklist-over";
 const BASE = new Set(T.map(t => t[0]));
@@ -300,24 +313,27 @@ let done = {}, custom = [], over = {};
 try { done = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch(e){ done = {}; }
 try { custom = JSON.parse(localStorage.getItem(LSC) || "[]") || []; } catch(e){ custom = []; }
 try { over = JSON.parse(localStorage.getItem(LSO) || "{}") || {}; } catch(e){ over = {}; }
-let filter = "all", helper = null, hideDone = false, db = null, newWho = "A", editingId = null;
+// Filtros múltiples: dentro de cada grupo basta con cumplir uno; entre grupos se deben cumplir todos
+const fWho = new Set(), fHelp = new Set(), fDay = new Set();
+let hideDone = false, db = null, newWho = "A", editingId = null;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-// tarea personalizada: {id, area, text, who, note, urg, help:[]}
-// over: cambios a tareas de la lista base, {id: {area, text, who, note, urg, help} | {deleted:true}}
+// tarea personalizada: {id, area, text, who, note, urg, help:[], day}
+// over: cambios a tareas de la lista base, {id: {area, text, who, note, urg, help, day} | {deleted:true}}
 const all = () => T.filter(t => !(over[t[0]] && over[t[0]].deleted)).map(t => {
   const o = over[t[0]];
-  return o ? [t[0], o.area, o.text, o.who, o.note||"", o.urg?1:0, o.help||[]] : [t[0], t[1], t[2], t[3], t[4]||"", t[5]||0, H[t[0]]||[]];
-}).concat(custom.map(c => [c.id, c.area, c.text, c.who, c.note||"", c.urg?1:0, c.help||[]]));
+  return o ? [t[0], o.area, o.text, o.who, o.note||"", o.urg?1:0, o.help||[], "day" in o ? o.day : (D[t[0]]||"")] : [t[0], t[1], t[2], t[3], t[4]||"", t[5]||0, H[t[0]]||[], D[t[0]]||""];
+}).concat(custom.map(c => [c.id, c.area, c.text, c.who, c.note||"", c.urg?1:0, c.help||[], c.day||""]));
 const findTask = id => all().find(t => t[0] === id);
 const helpersOf = t => t[6] || [];
 
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const filtering = () => fWho.size || fHelp.size || fDay.size;
 function visible(t){
-  if (filter !== "all"){
-    if (filter === "N" ? t[3] !== "N" : !(t[3] === filter || t[3] === "AM")) return false;
-  }
-  if (helper && !helpersOf(t).includes(helper)) return false;
+  if (fWho.size && ![...fWho].some(f => f === "N" ? t[3] === "N" : (t[3] === f || t[3] === "AM"))) return false;
+  if (fHelp.size && !helpersOf(t).some(n => fHelp.has(n))) return false;
+  if (fDay.size && !fDay.has(t[7] || "none")) return false;
   if (hideDone && done[t[0]]) return false;
   return true;
 }
@@ -325,13 +341,13 @@ function rowHTML(t){
   const d = !!done[t[0]], hp = helpersOf(t);
   return `<li class="row${d?" done":""}" tabindex="0" role="checkbox" aria-checked="${d}" data-id="${t[0]}">
     <span class="box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>
-    <span class="task"><span class="t">${esc(t[2])}</span>${t[4]?`<span class="note">${esc(t[4])}</span>`:""}${hp.length?`<span class="help">con ${esc(hp.join(", "))}</span>`:""}<span class="acts"><button class="act" data-edit="${t[0]}">Editar</button><button class="act" data-del="${t[0]}">Eliminar</button></span></span>
+    <span class="task"><span class="t">${esc(t[2])}</span>${t[7]&&DAYNAME[t[7]]?` <span class="dia">${DAYNAME[t[7]]}</span>`:""}${t[4]?`<span class="note">${esc(t[4])}</span>`:""}${hp.length?`<span class="help">con ${esc(hp.join(", "))}</span>`:""}<span class="acts"><button class="act" data-edit="${t[0]}">Editar</button><button class="act" data-del="${t[0]}">Eliminar</button></span></span>
     <span class="who ${t[3]}">${WHO[t[3]]}</span></li>`;
 }
 function sectionHTML(key, title, items, extra){
   const vis = items.filter(visible);
   const n = items.filter(t => done[t[0]]).length;
-  if (!items.length || (!vis.length && (filter !== "all" || helper))) return "";
+  if (!items.length || (!vis.length && filtering())) return "";
   const complete = n === items.length;
   return `<section class="${extra||""}${complete?" complete":""}" data-sec="${key}">
     <h2>${esc(title)} <span class="count">${n}/${items.length}</span><span class="done-tag">fusionada</span></h2>
@@ -342,7 +358,7 @@ function render(){
   let h = sectionHTML("urg","Urgente esta semana", itemsOf("urg"), "urg");
   for (const [k,title] of AREAS) h += sectionHTML(k, title, itemsOf(k));
   $("#list").innerHTML = h;
-  updateMeter(); buildHelpers();
+  updateMeter(); buildHelpers(); buildDays(); syncWhoChips();
 }
 function updateMeter(){
   const A = all(), n = A.filter(t => done[t[0]]).length, p = A.length ? Math.round(n / A.length * 100) : 0;
@@ -388,13 +404,26 @@ function buildHelpers(){
   const c = {};
   all().forEach(t => helpersOf(t).forEach(n => c[n] = (c[n]||0) + 1));
   const names = Object.keys(c).sort((a,b) => c[b]-c[a] || a.localeCompare(b,"es"));
-  if (helper && !c[helper]) helper = null;
-  $("#hrow").innerHTML = `<span class="lbl">con</span>` + names.map(n => `<button class="chip" aria-pressed="${n===helper}" data-h="${esc(n)}">${esc(n)} <span style="opacity:.6">${c[n]}</span></button>`).join("");
+  for (const n of fHelp) if (!c[n]) fHelp.delete(n);
+  $("#hrow").innerHTML = `<span class="lbl">con</span>` + names.map(n => `<button class="chip" aria-pressed="${fHelp.has(n)}" data-h="${esc(n)}">${esc(n)} <span style="opacity:.6">${c[n]}</span></button>`).join("");
   $("#helpList").innerHTML = names.map(n => `<option value="${esc(n)}">`).join("");
 }
 $("#hrow").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
-  helper = helper === b.dataset.h ? null : b.dataset.h;
+  const n = b.dataset.h; fHelp.has(n) ? fHelp.delete(n) : fHelp.add(n);
+  render();
+});
+
+// Filtro por día
+function buildDays(){
+  const c = {}, today = todayKey();
+  all().forEach(t => { const k = DAYNAME[t[7]] ? t[7] : "none"; c[k] = (c[k]||0) + 1; });
+  const chip = (k, label) => `<button class="chip" aria-pressed="${fDay.has(k)}" data-d="${k}">${label}${k===today?` <span class="hoy">hoy</span>`:""} <span style="opacity:.6">${c[k]||0}</span></button>`;
+  $("#drow").innerHTML = `<span class="lbl">día</span>` + DAYS.map(([k,l]) => chip(k, l)).join("") + chip("none", "Sin día");
+}
+$("#drow").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  const k = b.dataset.d; fDay.has(k) ? fDay.delete(k) : fDay.add(k);
   render();
 });
 
@@ -407,18 +436,24 @@ $("#list").addEventListener("keydown", e => {
   if (e.target.closest(".act")) return;
   const r = e.target.closest(".row"); if (r && (e.key === " " || e.key === "Enter")){ e.preventDefault(); toggle(r.dataset.id); }
 });
+// "Todas" limpia todos los filtros; los responsables se pueden combinar
+function syncWhoChips(){
+  document.querySelectorAll("#rrow .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "all" ? !filtering() : fWho.has(x.dataset.f)));
+}
 document.querySelectorAll("#rrow .chip").forEach(b => b.addEventListener("click", () => {
-  filter = b.dataset.f;
-  document.querySelectorAll("#rrow .chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  const f = b.dataset.f;
+  if (f === "all"){ fWho.clear(); fHelp.clear(); fDay.clear(); }
+  else fWho.has(f) ? fWho.delete(f) : fWho.add(f);
   render();
 }));
 $("#hide").addEventListener("change", e => { hideDone = e.target.checked; render(); });
 
 // Formulario de nueva tarea
+$("#fDay").innerHTML = `<option value="">Sin día</option>` + DAYS.map(([k,l]) => `<option value="${k}">${l}</option>`).join("");
 $("#fArea").innerHTML = AREAS.map(([k,t]) => `<option value="${k}">${esc(t)}</option>`).join("");
 function resetForm(){
   editingId = null;
-  $("#fText").value = ""; $("#fNote").value = ""; $("#fHelp").value = ""; $("#fUrg").checked = false;
+  $("#fText").value = ""; $("#fNote").value = ""; $("#fHelp").value = ""; $("#fDay").value = ""; $("#fUrg").checked = false;
   $("#fErr").textContent = ""; $("#fSubmit").textContent = "Agregar tarea";
   setWho("A");
 }
@@ -442,7 +477,7 @@ function startEdit(id){
   const t = findTask(id); if (!t) return;
   resetForm(); editingId = id;
   $("#fText").value = t[2]; $("#fArea").value = t[1]; $("#fNote").value = t[4];
-  $("#fHelp").value = helpersOf(t).join(", "); $("#fUrg").checked = !!t[5]; setWho(t[3]);
+  $("#fHelp").value = helpersOf(t).join(", "); $("#fUrg").checked = !!t[5]; $("#fDay").value = DAYNAME[t[7]] ? t[7] : ""; setWho(t[3]);
   $("#fSubmit").textContent = "Guardar cambios";
   openForm(true);
   $("#form").scrollIntoView({block:"center", behavior:"smooth"});
@@ -454,7 +489,7 @@ $("#form").addEventListener("submit", async e => {
   $("#fErr").textContent = "";
   const fields = {
     area: $("#fArea").value, text, who: newWho,
-    note: $("#fNote").value.trim(), urg: $("#fUrg").checked,
+    note: $("#fNote").value.trim(), urg: $("#fUrg").checked, day: $("#fDay").value,
     help: $("#fHelp").value.split(",").map(x => x.trim()).filter(Boolean).map(x => x[0].toUpperCase() + x.slice(1))
   };
   const editId = editingId;
@@ -521,6 +556,7 @@ $("#sync").textContent = "Conectando…";
       const c = {area: AREAS.some(a => a[0] === v.area) ? v.area : "log", text: String(v.text || ""),
         who: WHO[v.who] ? v.who : "N", note: String(v.note || ""), urg: !!v.urg,
         help: Array.isArray(v.help) ? v.help.map(String) : []};
+      if (v.day !== undefined) c.day = DAYNAME[v.day] ? v.day : "";
       if (!c.text) return;
       if (BASE.has(d.id)) nextOver[d.id] = c; else nextCustom.push({id: d.id, ...c, at: v.at || 0});
     });
